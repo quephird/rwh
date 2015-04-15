@@ -1,5 +1,6 @@
 module Chapter4 where
 
+import Data.Char (digitToInt, isDigit)
 import Data.Maybe
 
 -- First set of exercises
@@ -50,4 +51,27 @@ transpose = unlines . transpose' . lines where
   transpose' ss                    = map head nonEmptySs : (transpose' $ map tail nonEmptySs) where
     nonEmptySs = filter ((/=) "") ss
 
-transposeFile inputFile outputFile = interactWith transpose inputFile outputFile where
+transposeFile inputFile outputFile = interactWith transpose inputFile outputFile
+
+-- Second set of exercises
+
+-- 1.
+asInt' :: String -> Int
+asInt' ""       = error "Empty string"
+asInt' ('-':[]) = error "String must have digits following -"
+asInt' ('-':ds) = negate $ asInt' ds
+asInt' (d:ds)   = foldl (\a d -> 10*a + digitToInt' d) 0 (d:ds) where
+  digitToInt' d | d `elem` ['0'..'9'] = digitToInt d
+  digitToInt' _                       = error "String contains non-digit characters"
+
+-- 2.
+type ErrorMessage = String
+asInt'' :: String -> Either ErrorMessage Int
+asInt'' ""       = Left "Empty string"
+asInt'' ('-':[]) = Left "String must have digits following -"
+asInt'' ('-':ds) =
+  let (Right int) = asInt'' ds in
+    Right $ negate int
+asInt'' ds
+  | not $ all isDigit ds = Left "String contains non-digit characters"
+  | otherwise            = Right $ foldl (\a d -> 10*a + digitToInt d) 0 ds where
