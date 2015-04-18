@@ -97,6 +97,15 @@ takeWhileFold p l = foldr f [] l where
 
 -- 5.
 
+groupByFold :: (a -> a -> Bool) -> [a] -> [[a]]
+groupByFold f (h:t) = foldl f' [[h]] t where
+  f' acc x
+    | f prevX x = iAcc ++ [lAcc ++ [x]]
+    | otherwise = acc ++ [[x]] where
+      iAcc  = init acc
+      lAcc  = last acc
+      prevX = head lAcc
+
 -- 6.
 
 anyFold :: (a -> Bool) -> [a] -> Bool
