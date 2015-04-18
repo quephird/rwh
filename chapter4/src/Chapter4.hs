@@ -75,3 +75,46 @@ asInt'' ('-':ds) =
 asInt'' ds
   | not $ all isDigit ds = Left "String contains non-digit characters"
   | otherwise            = Right $ foldl (\a d -> 10*a + digitToInt d) 0 ds where
+
+-- 3.
+concatFold :: [[a]] -> [a]
+concatFold = foldr (++) []
+
+-- 4.
+
+takeWhileTr :: (a -> Bool) -> [a] -> [a]
+takeWhileTr p l = takeWhileTr' l [] where
+  takeWhileTr' [] acc     = acc
+  takeWhileTr' (x:xs) acc
+    | p x       = takeWhileTr' xs (acc ++ [x])
+    | otherwise = acc
+
+takeWhileFold :: (a -> Bool) -> [a] -> [a]
+takeWhileFold p l = foldr f [] l where
+  f x acc
+    | p x       = x:acc
+    | otherwise = []
+
+-- 5.
+
+-- 6.
+
+anyFold :: (a -> Bool) -> [a] -> Bool
+anyFold f = foldr f' False where
+  f' x acc
+    | f x       = True
+    | otherwise = acc
+
+cycleFold :: [a] -> [a]
+cycleFold l = foldr f [] [1..] where
+  f _ acc = l ++ acc
+
+wordsFold :: String -> [String]
+wordsFold = foldr f [] where
+  f x acc
+    | x `elem` ['\n','\t'] = "":acc
+    | otherwise            = (x:w):ws where
+      (w:ws) = acc
+
+unlinesFold :: [String] -> String
+unlinesFold = foldr (\x acc -> x ++ ['\n'] ++ acc) ""
