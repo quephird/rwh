@@ -1,7 +1,8 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Chapter8 (globToRegex, matchesGlob) where
 
-import Control.Exception (SomeException, handle)
+--  import Control.Exception (ErrorCall(..), SomeException, handle)
+import Control.Exception
 import Control.Monad (forM)
 import Data.Char (isUpper, toLower, toUpper)
 import System.Directory (doesDirectoryExist, doesFileExist,
@@ -9,7 +10,7 @@ import System.Directory (doesDirectoryExist, doesFileExist,
 import System.FilePath ((</>), dropTrailingPathSeparator, splitFileName)
 import System.Info (os)
 import System.Posix.Files (fileExist)
-import Text.Regex.Posix
+import Text.Regex.Posix ((=~))
 
 -- First set of exercises.
 
@@ -124,3 +125,29 @@ listPlain dirName baseName = do
               then doesDirectoryExist dirName
               else fileExist (dirName </> baseName)
     return (if exists then [baseName] else [])
+
+-- Third set of exercises
+
+-- 1.
+
+data GlobError = UnterminatedCharacterClassError
+  deriving (Show)
+
+globToRegexE :: String -> Either GlobError String
+globToRegexE s = iter s "" where
+  iter s acc = case s of
+    ""             -> Right acc
+    ('*':cs)       -> iter cs (acc ++ ".*")
+    ('?':cs)       -> iter cs (acc ++ ".")
+    ('[':'!':c:cs) -> charClass cs (acc ++ "[^" ++ [c])
+    ('[':c:cs)     -> charClass cs (acc ++ "[" ++ [c])
+    "["            -> Left UnterminatedCharacterClassError
+    (c:cs)         -> iter cs (acc ++ escape c)
+  charClass s acc = case s of
+    (']':cs)  -> iter cs (acc ++ "]")
+    (c:cs)    -> charClass cs (acc ++ [c])
+    []        -> Left UnterminatedCharacterClassError
+  escape c
+    | c `elem` regexChars = '\\' : [c]
+    | otherwise           = [c]
+      where regexChars = "\\+()^$.{}]|"
